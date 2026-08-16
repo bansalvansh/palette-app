@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Palette &mdash; wear what suits you</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+  :root{
+    --ink:#14161B; --ink-soft:#1E2128; --bone:#EDE7DD; --bone-dim:#C9C2B5;
+    --line: rgba(237,231,221,0.14);
+    --accent-1:#B5723A; --accent-2:#6E7F6B; --accent-3:#8C5A7A; --warn:#C1714B;
+    --radius:14px; --serif:'Fraunces',Georgia,serif; --sans:'Space Grotesk','Segoe UI',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--ink);color:var(--bone);font-family:var(--sans);}
+  body{min-height:100vh;}
+  ::selection{background:var(--accent-1);color:var(--ink);}
+  a{color:inherit;} button{font-family:var(--sans);}
+
+  header.top{padding:28px 24px 20px; display:flex;align-items:baseline;justify-content:space-between; max-width:1160px;margin:0 auto; border-bottom:1px solid var(--line);}
+  .wordmark{font-family:var(--serif); font-weight:600; font-style:italic; font-size:26px;}
+  .wordmark span{color:var(--accent-1); font-style:normal;}
+  .tagline{font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:var(--bone-dim);}
+
+  .hero{padding:56px 24px 34px; max-width:1160px; margin:0 auto;}
+  .hero h1{font-family:var(--serif); font-weight:500; font-style:italic; font-size:clamp(30px, 4.6vw, 52px); line-height:1.06; margin:0 0 16px; max-width:780px;}
+  .hero p.lede{font-size:15.5px; color:var(--bone-dim); max-width:560px; line-height:1.6; margin:0;}
+  .swatch-strip{display:flex; height:10px; border-radius:999px; overflow:hidden; margin:30px 0 0; border:1px solid var(--line);}
+  .swatch-strip div{flex:1; transition:background .5s ease;}
+
+  .gender-toggle{display:inline-flex; gap:6px; margin-top:26px; border:1px solid var(--line); border-radius:999px; padding:4px;}
+  .gender-toggle button{border:none; background:transparent; color:var(--bone-dim); padding:8px 18px; border-radius:999px; font-size:13px; cursor:pointer; transition:all .15s ease;}
+  .gender-toggle button.active{background:var(--bone); color:var(--ink); font-weight:700;}
+
+  .stage{display:grid; grid-template-columns: 1.15fr 0.85fr; gap:28px; max-width:1160px; margin:34px auto 90px; padding:0 24px; align-items:start;}
+  @media (max-width: 860px){ .stage{grid-template-columns:1fr;} }
+
+  .panel{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--radius); padding:28px;}
+  .panel h2{font-family:var(--serif); font-weight:500; font-size:22px; margin:0 0 4px;}
+  .eyebrow{font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:var(--accent-1); margin:0 0 10px; display:block;}
+  .panel p.help{color:var(--bone-dim); font-size:14px; line-height:1.55; margin:0 0 22px;}
+
+  .dropzone{border:1.5px dashed var(--bone-dim); border-radius:10px; padding:26px; display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center; cursor:pointer; transition:border-color .2s ease, background .2s ease;}
+  .dropzone:hover, .dropzone:focus-visible{border-color:var(--accent-1); background:rgba(181,114,58,0.06); outline:none;}
+  .dropzone .fname{font-size:13px; color:var(--accent-1);}
+  #fileInput{display:none;}
+
+  .photo-wrap{position:relative; max-width:220px; margin:16px auto 0;}
+  .preview-photo{width:100%; border-radius:10px; display:block; border:1px solid var(--line);}
+  #overlayCanvas{position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;}
+
+  .analysis-status{margin-top:14px; font-size:12.5px; color:var(--bone-dim); text-align:center; line-height:1.5; min-height:18px;}
+  .analysis-status.error{color:var(--warn);}
+  .analysis-status.ok{color:var(--accent-2);}
+
+  fieldset{border:none; padding:0; margin:0 0 20px;}
+  legend{font-size:13px; font-weight:600; margin:0 0 10px; color:var(--bone);}
+  .options{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{border:1px solid var(--line); background:transparent; color:var(--bone-dim); padding:8px 14px; border-radius:999px; font-size:13px; cursor:pointer; transition:all .15s ease;}
+  .chip:hover{border-color:var(--bone-dim); color:var(--bone);}
+  .chip.active{background:var(--accent-1); border-color:var(--accent-1); color:var(--ink); font-weight:600;}
+  .chip.detected{border-color:var(--accent-2);}
+  .chip:focus-visible{outline:2px solid var(--accent-1); outline-offset:2px;}
+
+  .cta{width:100%; margin-top:8px; padding:15px 20px; border-radius:10px; border:none; background:var(--bone); color:var(--ink); font-weight:700; font-size:15px; cursor:pointer; transition:transform .12s ease, background .15s ease;}
+  .cta:hover{background:#fff;}
+  .cta:active{transform:scale(0.98);}
+  .cta:disabled{opacity:.45; cursor:not-allowed;}
+  .cta:focus-visible{outline:2px solid var(--accent-1); outline-offset:3px;}
+  .note{font-size:12px; color:var(--bone-dim); margin-top:12px; line-height:1.5;}
+
+  .analysis-row{display:flex; align-items:center; gap:14px; margin-bottom:16px;}
+  .analysis-row .dot{width:34px; height:34px; border-radius:50%; border:1px solid var(--line); flex:none;}
+  .analysis-row .label{font-size:12px; color:var(--bone-dim); text-transform:uppercase; letter-spacing:.08em;}
+  .analysis-row .value{font-family:var(--serif); font-style:italic; font-size:17px;}
+  .season-badge{display:inline-block; margin-top:2px; font-size:11px; color:var(--accent-2); border:1px solid var(--line); padding:2px 9px; border-radius:999px;}
+  .conf-badge{display:inline-block; margin-top:2px; margin-left:4px; font-size:10.5px; padding:2px 8px; border-radius:999px; font-weight:600; letter-spacing:.03em; text-transform:uppercase;}
+  .conf-badge.high{background:rgba(122,154,110,0.18); color:#9ABF8E;}
+  .conf-badge.medium{background:rgba(201,161,90,0.18); color:#D9B673;}
+  .conf-badge.low{background:rgba(193,113,75,0.18); color:#D98F6D;}
+  .contrast-note{margin-top:8px; font-size:11.5px; color:var(--bone-dim); line-height:1.5; max-width:280px;}
+  .palette-row{display:flex; gap:8px; margin-top:6px; flex-wrap:wrap;}
+  .palette-row .chip-color{width:30px; height:30px; border-radius:8px; border:1px solid var(--line);}
+  .status-empty{color:var(--bone-dim); font-size:14px; line-height:1.6;}
+
+  .body-shape-block{margin-top:22px; padding-top:20px; border-top:1px solid var(--line);}
+  .body-shape-block .label{font-size:12px; color:var(--bone-dim); text-transform:uppercase; letter-spacing:.08em; margin-bottom:8px;}
+  .shape-note{font-size:12px; color:var(--bone-dim); margin-top:8px; line-height:1.5;}
+
+  .results{max-width:1160px; margin:0 auto 100px; padding:0 24px;}
+  .results-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:10px;}
+  .results-head h2{font-family:var(--serif); font-weight:500; font-style:italic; font-size:28px; margin:0;}
+  .results-head .count{color:var(--bone-dim); font-size:13px;}
+
+  .grid{display:grid; grid-template-columns:repeat(4, 1fr); gap:18px;}
+  @media (max-width:980px){ .grid{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:560px){ .grid{grid-template-columns:1fr;} }
+
+  .card{background:var(--ink-soft); border:1px solid var(--line); border-radius:12px; overflow:hidden; display:flex; flex-direction:column;}
+  .card .swatch{height:110px; position:relative;}
+  .card .swatch-wrap{height:110px; position:relative; overflow:hidden; background:var(--ink);}
+  .card .swatch-wrap img{width:100%; height:100%; object-fit:cover; display:block;}
+  .card .swatch-wrap .swatch{position:absolute; inset:0; height:auto;}
+  .card .swatch .tag, .card .swatch-wrap .tag{position:absolute; top:10px; left:10px; background:rgba(20,22,27,0.72); color:var(--bone); font-size:10px; letter-spacing:.08em; text-transform:uppercase; padding:4px 8px; border-radius:999px;}
+  .card .swatch-wrap .tag.verified{background:rgba(122,154,110,0.85); color:var(--ink); font-weight:700;}
+  .buy-btn{display:block; text-align:center; margin-top:10px; padding:10px; border-radius:8px; background:var(--bone); color:var(--ink); font-size:12px; font-weight:700; text-decoration:none; letter-spacing:.03em; text-transform:uppercase; transition:background .15s ease;}
+  .buy-btn:hover{background:#fff;}
+  .card .body{padding:14px 16px 16px; display:flex; flex-direction:column; gap:6px; flex:1;}
+  .card .brand{font-size:11px; text-transform:uppercase; letter-spacing:.09em; color:var(--bone-dim);}
+  .card .name{font-family:var(--serif); font-size:16px; line-height:1.3;}
+  .card .why{font-size:11.5px; color:var(--accent-2); font-style:italic;}
+  .card .price{font-weight:700; font-size:14px; margin-top:auto; padding-top:8px;}
+  .shop-row{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;}
+  .shop-row a{flex:1; min-width:70px; text-align:center; padding:8px 6px; border-radius:8px; border:1px solid var(--bone); font-size:11px; text-decoration:none; letter-spacing:.03em; text-transform:uppercase; transition:background .15s ease, color .15s ease;}
+  .shop-row a:hover{background:var(--bone); color:var(--ink);}
+
+  .analytics{max-width:1160px; margin:0 auto 80px; padding:20px 24px; border-top:1px solid var(--line);}
+  .analytics h3{font-size:12px; text-transform:uppercase; letter-spacing:.1em; color:var(--bone-dim); margin:0 0 12px;}
+  .stat-row{display:flex; gap:32px; flex-wrap:wrap;}
+  .stat{font-family:var(--serif); font-size:22px;}
+  .stat span{display:block; font-family:var(--sans); font-size:11px; color:var(--bone-dim); text-transform:uppercase; letter-spacing:.08em; margin-top:2px;}
+
+  .how-block{max-width:1160px; margin:0 auto 70px; padding:24px; border:1px solid var(--line); border-radius:var(--radius); background:var(--ink-soft);}
+  .how-block summary{cursor:pointer; font-family:var(--serif); font-style:italic; font-size:17px;}
+  .how-block .how-body{margin-top:14px; font-size:13.5px; color:var(--bone-dim); line-height:1.7;}
+  .how-block code{background:rgba(237,231,221,0.08); padding:1px 6px; border-radius:4px; font-size:12px;}
+
+  .hidden{display:none !important;}
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+
+  .spinner{width:16px; height:16px; border-radius:50%; border:2px solid var(--line); border-top-color:var(--accent-1); display:inline-block; animation:spin .8s linear infinite; vertical-align:middle; margin-right:6px;}
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wordmark">palette<span>.</span></div>
+  <div class="tagline">Live &mdash; real face + pose analysis</div>
+</header>
+
+<section class="hero">
+  <h1>Upload a photo. We detect your face and body, then match clothes to both.</h1>
+  <p class="lede">Real face-landmark detection reads your undertone from your actual skin, not the whole image. Real pose detection reads your shoulder-to-hip proportions to estimate body shape. Then we pull matches with live links to Myntra, Amazon, Ajio and Flipkart.</p>
+  <div class="swatch-strip" id="heroStrip">
+    <div style="background:#B5723A"></div><div style="background:#8C5A7A"></div><div style="background:#6E7F6B"></div><div style="background:#C9A15A"></div><div style="background:#4A5A66"></div>
+  </div>
+  <div class="gender-toggle" id="genderToggle">
+    <button type="button" class="chip-gender active" data-value="men">Menswear</button>
+    <button type="button" class="chip-gender" data-value="women">Womenswear</button>
+  </div>
+</section>
+
+<div class="stage">
+  <div class="panel">
+    <span class="eyebrow">Step 1 &mdash; Step 2</span>
+    <h2>Tell us about you</h2>
+    <p class="help">Use a clear, front-facing, full-body photo in fitted clothing, standing straight &mdash; that's what the shoulder/hip read needs to be accurate. Analysis runs entirely in your browser; the photo itself is never uploaded anywhere.</p>
+
+    <label class="dropzone" id="dropzone" tabindex="0">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
+      <div>Click to upload, or drag a photo here</div>
+      <div class="fname" id="fname"></div>
+      <input type="file" id="fileInput" accept="image/*" capture="user">
+    </label>
+    <div class="photo-wrap">
+      <img id="previewPhoto" class="preview-photo hidden" alt="Your uploaded photo">
+      <canvas id="overlayCanvas" class="hidden"></canvas>
+    </div>
+    <div class="analysis-status" id="analysisStatus"></div>
+
+    <fieldset style="margin-top:26px;">
+      <legend>What are you shopping for?</legend>
+      <div class="options" data-group="category" id="categoryOptions"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Occasion</legend>
+      <div class="options" data-group="occasion">
+        <button type="button" class="chip" data-value="everyday">Everyday</button>
+        <button type="button" class="chip" data-value="office">Office</button>
+        <button type="button" class="chip" data-value="festive">Festive</button>
+        <button type="button" class="chip" data-value="evening">Evening out</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Style</legend>
+      <div class="options" data-group="style">
+        <button type="button" class="chip" data-value="minimal">Minimal</button>
+        <button type="button" class="chip" data-value="classic">Classic</button>
+        <button type="button" class="chip" data-value="bold">Bold</button>
+        <button type="button" class="chip" data-value="streetwear">Streetwear</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Budget</legend>
+      <div class="options" data-group="budget">
+        <button type="button" class="chip" data-value="1500">Under &#8377;1,500</button>
+        <button type="button" class="chip" data-value="3000">Under &#8377;3,000</button>
+        <button type="button" class="chip" data-value="99999">No limit</button>
+      </div>
+    </fieldset>
+
+    <button class="cta" id="ctaBtn" disabled>Upload a photo to continue</button>
+    <div class="note">2 items in this catalog are verified against real, currently-live listings (marked &ldquo;Verified listing&rdquo; below) as a proof of concept. The rest are demo entries &mdash; see the README for how to connect a real product feed.</div>
+  </div>
+
+  <div class="panel">
+    <span class="eyebrow">Reading</span>
+    <h2>Your analysis</h2>
+    <p class="help" id="previewHelp">Upload a photo and this fills in automatically.</p>
+    <div id="previewEmpty" class="status-empty">Nothing analyzed yet.</div>
+
+    <div id="previewFilled" class="hidden">
+      <div class="analysis-row">
+        <div class="dot" id="undertoneDot"></div>
+        <div>
+          <div class="label">Undertone read (from cheek/forehead landmarks, LAB color space)</div>
+          <div class="value" id="undertoneValue">&mdash;</div>
+          <div class="season-badge" id="seasonBadge"></div>
+          <div class="conf-badge" id="undertoneConfBadge"></div>
+          <div class="contrast-note hidden" id="contrastNote"></div>
+        </div>
+      </div>
+      <div class="label" style="margin-bottom:6px;">Colors that should work well on you</div>
+      <div class="palette-row" id="paletteRow"></div>
+
+      <div class="body-shape-block" id="bodyShapeBlock">
+        <div class="label">Body shape (from shoulder/hip landmark ratio) <span class="conf-badge" id="bodyConfBadge"></span></div>
+        <div class="options" data-group="bodyShape" id="bodyShapeOptions">
+          <button type="button" class="chip" data-value="invertedTriangle">Broad shoulders</button>
+          <button type="button" class="chip" data-value="rectangle">Balanced / rectangle</button>
+          <button type="button" class="chip" data-value="hourglass">Hourglass</button>
+          <button type="button" class="chip" data-value="pear">Pear / wider hips</button>
+          <button type="button" class="chip" data-value="oval">Fuller midsection</button>
+        </div>
+        <div class="shape-note" id="shapeNote">Upload a full-body photo to auto-detect this &mdash; you can always correct it above.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="results hidden" id="resultsSection">
+  <div class="results-head">
+    <h2>Matched for you</h2>
+    <div class="count" id="resultsCount"></div>
+  </div>
+  <div class="grid" id="grid"></div>
+</section>
+
+<section class="analytics">
+  <h3>Live analytics (from server database)</h3>
+  <div class="stat-row">
+    <div class="stat" id="statAnalyzed">0<span>Photos analyzed</span></div>
+    <div class="stat" id="statRejected">0<span>Photos rejected (no face)</span></div>
+    <div class="stat" id="statMatches">0<span>Matches shown</span></div>
+    <div class="stat" id="statClicks">0<span>Shop-out clicks</span></div>
+  </div>
+</section>
+
+<details class="how-block">
+  <summary>How the analysis actually works</summary>
+  <div class="how-body">
+    1. Your photo is passed to <code>MediaPipe Face Landmarker</code>, a pretrained Google model that runs in your browser via WebAssembly and returns 478 facial points if a real face is present. No face found, face too small, or lighting too dark/blown-out &rarr; upload rejected rather than guessed at.<br><br>
+    2. Before sampling skin color, we run a gray-world white-balance correction across the photo &mdash; estimating the ambient light's color cast and correcting for it, so a warm-lit room doesn't fake a warm undertone reading.<br><br>
+    3. We sample 10 landmark points across cheeks, forehead, nose bridge and jaw (not eyes, lips, hair, or background), take a trimmed/median value per patch to drop outlier pixels (glare, tiny shadows), then convert to LAB color space. The <code>b</code> channel (blue&harr;yellow) is the standard signal used to classify warm vs. cool undertone.<br><br>
+    4. We also check how far the face is turned from the camera using landmark geometry, and how much the sampled patches agree with each other &mdash; both feed into a High/Medium/Low confidence badge shown next to the result, instead of presenting every read as equally certain.<br><br>
+    5. Real seasonal color analysis isn't just warm/cool &mdash; it also factors in how much contrast there is between your skin, hair and eyes. We sample iris color (from the model's iris landmarks) and a patch above the hairline, then measure how far their lightness sits from your skin tone. High contrast reads toward "Bright/Clear" seasons, low contrast toward "Soft/Muted" ones &mdash; both real terms colorists use, not ones we made up. If hair or eyes can't be read cleanly (hat, glare, hair out of frame), this part is skipped rather than guessed.<br><br>
+    6. The same photo is passed to <code>MediaPipe Pose Landmarker</code> for body keypoints. We compute the ratio of shoulder width to hip width &mdash; the same logic real stylist quizzes use ("are your shoulders wider than your hips?") &mdash; using each point's model-reported visibility score to gate whether the read is trustworthy, and checking the shoulder line is roughly horizontal so a tilted or leaning photo doesn't quietly skew the ratio.<br><br>
+    7. A single 2D photo genuinely can't measure waist definition reliably (clothing hides it), so the detected body shape shows as a pre-selected, editable option rather than a fixed verdict &mdash; you confirm or correct it.<br><br>
+    8. Undertone + body shape + your quiz answers are sent to the backend, which scores the catalog and returns matches with live shop links.
+  </div>
+</details>
+
+<canvas id="workCanvas" class="hidden"></canvas>
+
+<script type="module">
+import {
+  FaceLandmarker,
+  PoseLandmarker,
+  FilesetResolver
+} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+
+const state = { gender:'men', category:null, occasion:null, style:null, budget:null, photoReady:false, undertone:null, bodyShape:null, bodyShapeAuto:null };
+
+const CATEGORIES_BY_GENDER = {
+  men: [ ['tshirt','T-Shirts'], ['shirt','Shirts'], ['jeans','Jeans'], ['jacket','Jackets'], ['sweater','Sweaters'], ['kurta','Kurtas'] ],
+  women: [ ['tshirt','T-Shirts'], ['top','Tops'], ['jeans','Jeans'], ['dress','Dresses'], ['jacket','Jackets'], ['sweater','Sweaters'], ['kurta','Kurtas/Ethnic'] ],
+};
+
+function renderCategoryOptions(){
+  const wrap = document.getElementById('categoryOptions');
+  wrap.innerHTML = '';
+  CATEGORIES_BY_GENDER[state.gender].forEach(([value,label])=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'chip';
+    btn.dataset.value = value;
+    btn.textContent = label;
+    wrap.appendChild(btn);
+  });
+  state.category = null;
+  updateCtaState();
+}
+renderCategoryOptions();
+
+let faceLandmarker = null;
+let poseLandmarker = null;
+let modelsReady = false;
+
+async function loadModels(){
+  setStatus('<span class="spinner"></span>Loading analysis models (first time only)...', '');
+  try{
+    const filesetResolver = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
+    );
+    faceLandmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
+      baseOptions: {
+        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+        delegate: "CPU"
+      },
+      outputFaceBlendshapes: false,
+      runningMode: "IMAGE",
+      numFaces: 1
+    });
+    poseLandmarker = await PoseLandmarker.createFromOptions(filesetResolver, {
+      baseOptions: {
+        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+        delegate: "CPU"
+      },
+      runningMode: "IMAGE",
+      numPoses: 1
+    });
+    modelsReady = true;
+    setStatus('Ready \u2014 upload a photo.', 'ok');
+  }catch(err){
+    console.error('Model load failed', err);
+    setStatus('Could not load the analysis models (check your internet connection) \u2014 try reloading the page.', 'error');
+  }
+}
+loadModels();
+
+function setStatus(html, cls){
+  const el = document.getElementById('analysisStatus');
+  el.innerHTML = html;
+  el.className = 'analysis-status' + (cls ? ' ' + cls : '');
+}
+
+// ---------------- gender toggle ----------------
+document.getElementById('genderToggle').addEventListener('click', e=>{
+  const btn = e.target.closest('.chip-gender');
+  if(!btn) return;
+  document.querySelectorAll('.chip-gender').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  state.gender = btn.dataset.value;
+  renderCategoryOptions();
+  document.getElementById('resultsSection').classList.add('hidden');
+});
+
+// ---------------- chip selection (occasion/style/budget + body shape override) ----------------
+document.querySelectorAll('.options').forEach(group=>{
+  const key = group.dataset.group;
+  group.addEventListener('click', e=>{
+    const btn = e.target.closest('.chip');
+    if(!btn) return;
+    group.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+    btn.classList.add('active');
+    state[key] = btn.dataset.value;
+    if(key === 'bodyShape' && btn.dataset.value !== state.bodyShapeAuto){
+      postEvent('body_shape_overridden', { from: state.bodyShapeAuto, to: btn.dataset.value });
+    }
+    updateCtaState();
+  });
+});
+
+// ---------------- upload handling ----------------
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const fname = document.getElementById('fname');
+const previewPhoto = document.getElementById('previewPhoto');
+const overlayCanvas = document.getElementById('overlayCanvas');
+const canvas = document.getElementById('workCanvas');
+const ctx = canvas.getContext('2d', { willReadFrequently:true });
+
+dropzone.addEventListener('click', ()=>fileInput.click());
+dropzone.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); fileInput.click(); }});
+dropzone.addEventListener('dragover', e=>{ e.preventDefault(); dropzone.style.borderColor='var(--accent-1)'; });
+dropzone.addEventListener('dragleave', ()=>{ dropzone.style.borderColor=''; });
+dropzone.addEventListener('drop', e=>{
+  e.preventDefault(); dropzone.style.borderColor='';
+  if(e.dataTransfer.files && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e=>{
+  if(e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
+});
+
+function handleFile(file){
+  if(!file.type.startsWith('image/')) return;
+  if(!modelsReady){ setStatus('Still loading models, try again in a moment...', ''); return; }
+  fname.textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    previewPhoto.src = ev.target.result;
+    previewPhoto.classList.remove('hidden');
+    const img = new Image();
+    img.onload = ()=> analyzePhoto(img);
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function analyzePhoto(img){
+  setStatus('<span class="spinner"></span>Detecting face and body...', '');
+  state.photoReady = false;
+  document.getElementById('previewFilled').classList.add('hidden');
+  document.getElementById('previewEmpty').classList.remove('hidden');
+
+  // ---- face detection: this is what rejects screenshots / non-photos ----
+  const faceResult = faceLandmarker.detect(img);
+  if(!faceResult.faceLandmarks || faceResult.faceLandmarks.length === 0){
+    setStatus('No face detected in this photo. Upload a clear, front-facing photo of yourself \u2014 not a screenshot or graphic.', 'error');
+    postEvent('analysis_rejected', { reason: 'no_face' });
+    refreshAnalytics();
+    return;
+  }
+
+  const lm = faceResult.faceLandmarks[0];
+  canvas.width = img.width; canvas.height = img.height;
+  ctx.drawImage(img, 0, 0, img.width, img.height);
+
+  // ---- gray-world auto white balance: estimate the ambient light color cast
+  // from the whole image and compute correction gains, so a warm-lit room
+  // doesn't fake a warm undertone reading ----
+  const wbGains = grayWorldGains(ctx, img.width, img.height);
+
+  // ---- frontal-angle check: a face turned away from camera skews cheek
+  // color sampling, so we flag it as a confidence factor rather than silently
+  // trusting a profile shot ----
+  const nose = lm[4], leftCheek = lm[50], rightCheek = lm[280];
+  let frontalness = 1;
+  if(nose && leftCheek && rightCheek){
+    const dL = Math.hypot(nose.x-leftCheek.x, nose.y-leftCheek.y);
+    const dR = Math.hypot(nose.x-rightCheek.x, nose.y-rightCheek.y);
+    frontalness = Math.min(dL,dR) / Math.max(dL,dR); // 1 = perfectly frontal, lower = turned
+  }
+
+  // ---- quality gate: reject faces too small/cropped to trust ----
+  const xs = lm.map(p=>p.x), ys = lm.map(p=>p.y);
+  const faceBoxW = (Math.max(...xs) - Math.min(...xs));
+  const faceBoxH = (Math.max(...ys) - Math.min(...ys));
+  if(faceBoxW < 0.12 || faceBoxH < 0.12){
+    setStatus('Your face reads too small in this photo for a reliable color read. Try a closer, front-facing shot.', 'error');
+    postEvent('analysis_rejected', { reason: 'face_too_small', faceBoxW: +faceBoxW.toFixed(3) });
+    refreshAnalytics();
+    return;
+  }
+
+  // ---- robust skin sampling: more landmark points, median instead of mean ----
+  // cheeks, forehead, nose bridge, jaw \u2014 avoids eyes/lips/hair/glasses glare
+  const skinIdx = [50, 280, 151, 118, 347, 6, 234, 454, 127, 356];
+  const patchMeans = [];
+  skinIdx.forEach(i=>{
+    const pt = lm[i];
+    if(!pt) return;
+    const px = Math.round(pt.x * img.width);
+    const py = Math.round(pt.y * img.height);
+    const size = 8;
+    const data = ctx.getImageData(Math.max(0,px-size/2), Math.max(0,py-size/2), size, size).data;
+    let pr=0,pg=0,pb=0,pn=0;
+    for(let k=0;k<data.length;k+=4){ pr+=data[k]; pg+=data[k+1]; pb+=data[k+2]; pn++; }
+    // apply white-balance correction so ambient lighting color cast doesn't bleed into the undertone read
+    patchMeans.push({
+      r: clamp255((pr/pn) * wbGains.r),
+      g: clamp255((pg/pn) * wbGains.g),
+      b: clamp255((pb/pn) * wbGains.b),
+    });
+  });
+
+  const r = median(patchMeans.map(p=>p.r));
+  const g = median(patchMeans.map(p=>p.g));
+  const b = median(patchMeans.map(p=>p.b));
+
+  // ---- brightness gate: warn on very dark/blown-out lighting ----
+  const brightness = (r+g+b)/3;
+  if(brightness < 35){
+    setStatus('This photo reads very dark \u2014 the color read may be unreliable. A better-lit photo will give a more accurate result.', 'error');
+    postEvent('analysis_rejected', { reason: 'too_dark', brightness: Math.round(brightness) });
+    refreshAnalytics();
+    return;
+  }
+  if(brightness > 235){
+    setStatus('This photo reads overexposed \u2014 the color read may be unreliable. A softer-lit photo will give a more accurate result.', 'error');
+    postEvent('analysis_rejected', { reason: 'too_bright', brightness: Math.round(brightness) });
+    refreshAnalytics();
+    return;
+  }
+
+  // ---- confidence from how much the sampled patches agree with each other ----
+  const rSpread = spread(patchMeans.map(p=>p.r));
+  const gSpread = spread(patchMeans.map(p=>p.g));
+  const bSpread = spread(patchMeans.map(p=>p.b));
+  const avgSpread = (rSpread+gSpread+bSpread)/3;
+  let undertoneConfidence = avgSpread < 12 ? 'high' : avgSpread < 22 ? 'medium' : 'low';
+  // a turned face downgrades confidence even if the patches agree with each other,
+  // since agreement doesn't help if the angle itself is skewing the color
+  if(frontalness < 0.6 && undertoneConfidence === 'high') undertoneConfidence = 'medium';
+  if(frontalness < 0.4) undertoneConfidence = 'low';
+
+  const lab = rgbToLab(r,g,b);
+  let undertone = 'neutral';
+  if(lab.b > 16) undertone = 'warm';
+  else if(lab.b < 8) undertone = 'cool';
+
+  // ---- contrast read: real seasonal color analysis isn't just skin hue/value,
+  // it's how much skin, hair and eyes differ in tone from each other. Sample
+  // iris color (landmarks 468-477 are iris points on this model) and a patch
+  // just above the hairline, then compare their lightness against skin. Both
+  // samples are optional -- if either can't be read cleanly (glasses glare,
+  // hair out of frame, dyed/covered hair) we fall back gracefully rather than
+  // forcing a guess. ----
+  const contrastRead = readContrast(lm, img, lab, wbGains);
+
+  state.undertone = undertone;
+  state.photoReady = true;
+
+  // ---- pose detection: body shape from shoulder/hip ratio ----
+  let bodyShape = null;
+  let bodyConfidence = 'low';
+  let bodyNote = 'No full body detected in this photo \u2014 pick your shape manually above, or upload a full-body photo for an auto read.';
+  try{
+    const poseResult = poseLandmarker.detect(img);
+    if(poseResult.landmarks && poseResult.landmarks.length > 0){
+      const p = poseResult.landmarks[0];
+      const ls = p[11], rs = p[12], lh = p[23], rh = p[24];
+      // landmark visibility scores tell us how confidently the model actually saw each point
+      const visibilities = [ls,rs,lh,rh].map(pt=>pt && pt.visibility !== undefined ? pt.visibility : 0);
+      const minVisibility = Math.min(...visibilities);
+      if(ls && rs && lh && rh && minVisibility > 0.5){
+        // a tilted/leaning photo skews the x-distance ratio even when the
+        // body itself is proportioned normally, so check the shoulder line
+        // is roughly horizontal before trusting the ratio
+        const shoulderTilt = Math.abs(ls.y - rs.y) / (Math.abs(rs.x - ls.x) || 1);
+        const shoulderW = Math.abs(rs.x - ls.x);
+        const hipW = Math.abs(rh.x - lh.x);
+        const ratio = shoulderW / hipW;
+        const ambiguous = ratio <= 1.12 && ratio >= 0.90;
+        bodyConfidence = ambiguous ? 'medium' : 'high';
+        if(shoulderTilt > 0.25) bodyConfidence = 'low';
+        const tiltNote = shoulderTilt > 0.25 ? ' This photo looks tilted or leaning, which skews this read \u2014 a straight-on standing photo will be more reliable.' : '';
+        if(ratio > 1.12){ bodyShape = 'invertedTriangle'; bodyNote = `Detected (shoulder/hip ratio ${ratio.toFixed(2)}) \u2014 shoulders read wider than hips. Correct it above if it's off.${tiltNote}`; }
+        else if(ratio < 0.90){ bodyShape = 'pear'; bodyNote = `Detected (shoulder/hip ratio ${ratio.toFixed(2)}) \u2014 hips read wider than shoulders. Correct it above if it's off.${tiltNote}`; }
+        else{ bodyShape = 'rectangle'; bodyNote = `Detected (shoulder/hip ratio ${ratio.toFixed(2)}) \u2014 shoulders and hips read balanced. We can't tell rectangle from hourglass from a photo alone (that needs waist definition) \u2014 pick "Hourglass" above instead if that fits you better.${tiltNote}`; }
+      } else {
+        bodyNote = 'Body detected but the shoulder/hip points weren\u2019t clear enough to trust (partial view or loose clothing) \u2014 pick your shape manually above.';
+      }
+    }
+  }catch(err){
+    console.error('Pose detection failed', err);
+  }
+
+  state.bodyShape = bodyShape;
+  state.bodyShapeAuto = bodyShape;
+
+  showUndertone(undertone, `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`, lab, undertoneConfidence, contrastRead);
+  showBodyShape(bodyShape, bodyNote, bodyConfidence);
+
+  const statusMsg = (undertoneConfidence === 'low' || bodyConfidence === 'low')
+    ? 'Face and body read \u2014 confidence is low on part of this, see badges below. A straighter-on, better-lit photo will improve it.'
+    : 'Face and body read successfully.';
+  setStatus(statusMsg, undertoneConfidence === 'low' ? 'error' : 'ok');
+  updateCtaState();
+
+  postEvent('photo_analyzed', { undertone, bodyShape, undertoneConfidence, bodyConfidence, frontalness: +frontalness.toFixed(2), contrastLevel: contrastRead.level }).then(refreshAnalytics);
+}
+
+function samplePatchLab(ctx, img, xNorm, yNorm, wbGains, size){
+  size = size || 8;
+  const px = Math.round(xNorm * img.width);
+  const py = Math.round(yNorm * img.height);
+  if(px < size || py < size || px > img.width - size || py > img.height - size) return null;
+  const data = ctx.getImageData(px - size/2, py - size/2, size, size).data;
+  let r=0,g=0,b=0,n=0;
+  for(let k=0;k<data.length;k+=4){ r+=data[k]; g+=data[k+1]; b+=data[k+2]; n++; }
+  r = clamp255((r/n) * wbGains.r);
+  g = clamp255((g/n) * wbGains.g);
+  b = clamp255((b/n) * wbGains.b);
+  return rgbToLab(r,g,b);
+}
+
+function readContrast(lm, img, skinLab, wbGains){
+  // iris landmarks: this model's 478 points include iris (indices 468-477).
+  // 468 = left iris center, 473 = right iris center (MediaPipe convention).
+  const leftIris = lm[468], rightIris = lm[473];
+  let eyeLab = null;
+  if(leftIris && rightIris){
+    const l = samplePatchLab(ctx, img, leftIris.x, leftIris.y, wbGains, 4);
+    const r = samplePatchLab(ctx, img, rightIris.x, rightIris.y, wbGains, 4);
+    if(l && r) eyeLab = { L:(l.L+r.L)/2, a:(l.a+r.a)/2, b:(l.b+r.b)/2 };
+  }
+
+  // hairline patch: sample a bit above the forehead landmark (10), scaled by
+  // face height so it works across close-up and far-away photos. This misses
+  // for shaved heads, hats, or hair out of frame -- in which case we just
+  // don't get a hair sample rather than guessing.
+  let hairLab = null;
+  const forehead = lm[10], chin = lm[152];
+  if(forehead && chin){
+    const faceHeight = Math.abs(chin.y - forehead.y);
+    hairLab = samplePatchLab(ctx, img, forehead.x, forehead.y - faceHeight*0.35, wbGains, 6);
+  }
+
+  const samples = [eyeLab, hairLab].filter(Boolean);
+  if(samples.length === 0){
+    return { level: null, note: 'Hair/eye color weren\u2019t clearly readable in this photo, so this part of the read is skipped rather than guessed.' };
+  }
+
+  // contrast = how far hair/eye lightness sits from skin lightness -- the
+  // core signal professional color analysis uses to separate "Clear/Bright"
+  // seasons (high contrast) from "Soft/Muted" ones (low contrast), on top of
+  // the warm/cool and light/dark axes we already compute
+  const diffs = samples.map(s => Math.abs(s.L - skinLab.L));
+  const avgDiff = diffs.reduce((a,b)=>a+b,0) / diffs.length;
+  const level = avgDiff > 25 ? 'clear' : avgDiff < 12 ? 'soft' : 'medium';
+  return { level, avgDiff: +avgDiff.toFixed(1), sampleCount: samples.length };
+}
+
+function clamp255(v){ return Math.max(0, Math.min(255, v)); }
+
+function grayWorldGains(ctx, w, h){
+  // gray-world assumption: average color of a natural photo should be roughly
+  // neutral gray, so the amount each channel deviates from that estimates the
+  // ambient light's color cast. Sampled at reduced resolution for speed.
+  const sampleW = Math.min(w, 160);
+  const sampleH = Math.round(sampleW * (h / w));
+  const off = document.createElement('canvas');
+  off.width = sampleW; off.height = sampleH;
+  const offCtx = off.getContext('2d');
+  offCtx.drawImage(ctx.canvas, 0, 0, sampleW, sampleH);
+  const data = offCtx.getImageData(0, 0, sampleW, sampleH).data;
+  let rSum=0,gSum=0,bSum=0,n=0;
+  for(let i=0;i<data.length;i+=4){ rSum+=data[i]; gSum+=data[i+1]; bSum+=data[i+2]; n++; }
+  const rAvg=rSum/n, gAvg=gSum/n, bAvg=bSum/n;
+  const gray = (rAvg+gAvg+bAvg)/3;
+  // clamp gains to a sane range so a photo that's naturally very colorful
+  // (e.g. bold clothing filling the frame) doesn't overcorrect
+  const clampGain = g => Math.max(0.7, Math.min(1.4, g));
+  return {
+    r: clampGain(gray / (rAvg || 1)),
+    g: clampGain(gray / (gAvg || 1)),
+    b: clampGain(gray / (bAvg || 1)),
+  };
+}
+
+function median(arr){
+  const sorted = [...arr].sort((a,b)=>a-b);
+  const mid = Math.floor(sorted.length/2);
+  return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid-1]+sorted[mid])/2;
+}
+
+function spread(arr){
+  // mean absolute deviation \u2014 how much the sampled patches disagree with each other
+  const m = arr.reduce((a,b)=>a+b,0)/arr.length;
+  return arr.reduce((a,b)=>a+Math.abs(b-m),0)/arr.length;
+}
+
+function rgbToLab(r,g,b){
+  const toLin = v=>{ v/=255; return v>0.04045 ? Math.pow((v+0.055)/1.055,2.4) : v/12.92; };
+  const rl=toLin(r), gl=toLin(g), bl=toLin(b);
+  let x = rl*0.4124+gl*0.3576+bl*0.1805;
+  let y = rl*0.2126+gl*0.7152+bl*0.0722;
+  let z = rl*0.0193+gl*0.1192+bl*0.9505;
+  x/=0.95047; y/=1.0; z/=1.08883;
+  const f = t=> t>0.008856 ? Math.cbrt(t) : (7.787*t + 16/116);
+  const fx=f(x), fy=f(y), fz=f(z);
+  return { L: 116*fy-16, a: 500*(fx-fy), b: 200*(fy-fz) };
+}
+
+function showUndertone(undertone, sampledColor, lab, confidence, contrastRead){
+  document.getElementById('previewEmpty').classList.add('hidden');
+  document.getElementById('previewFilled').classList.remove('hidden');
+  document.getElementById('previewHelp').textContent = "Here's what we picked up from your photo.";
+  document.getElementById('undertoneDot').style.background = sampledColor;
+  const label = {warm:'Warm undertone', cool:'Cool undertone', neutral:'Neutral undertone'}[undertone];
+  document.getElementById('undertoneValue').textContent = label;
+
+  const confBadge = document.getElementById('undertoneConfBadge');
+  confBadge.textContent = confidence + ' confidence';
+  confBadge.className = 'conf-badge ' + confidence;
+
+  // proper seasonal color analysis uses three axes, not just hue: warm/cool
+  // (undertone), light/dark (lab.L), and clear/soft (contrast between skin,
+  // hair and eyes). Contrast is optional -- if we couldn't read it, fall
+  // back to the plain 4-season label rather than guessing a subtype.
+  const isLight = lab.L > 55;
+  let seasonLabel;
+  if(!contrastRead || !contrastRead.level){
+    const seasons = {
+      warm: isLight ? 'Reads close to a Spring palette' : 'Reads close to an Autumn palette',
+      cool: isLight ? 'Reads close to a Summer palette' : 'Reads close to a Winter palette',
+      neutral: 'Sits between palettes \u2014 most colors will work'
+    };
+    seasonLabel = seasons[undertone];
+  } else {
+    const c = contrastRead.level; // 'clear' | 'medium' | 'soft'
+    const subtype = c === 'clear' ? 'Bright' : c === 'soft' ? 'Soft' : 'True';
+    const seasons = {
+      warm: isLight ? `${subtype} Spring` : `${subtype} Autumn`,
+      cool: isLight ? `${subtype} Summer` : `${subtype} Winter`,
+      neutral: `${subtype} \u2014 between warm and cool`
+    };
+    seasonLabel = 'Reads close to a ' + seasons[undertone] + ' palette';
+  }
+  document.getElementById('seasonBadge').textContent = seasonLabel;
+
+  const contrastNote = document.getElementById('contrastNote');
+  if(contrastRead && contrastRead.level){
+    const explain = {
+      clear: 'skin, hair and eyes read with high contrast against each other \u2014 that usually suits bold, saturated colors.',
+      medium: 'skin, hair and eyes read with moderate contrast \u2014 a wide range of shades should work.',
+      soft: 'skin, hair and eyes read close in tone to each other \u2014 that usually suits muted, blended colors over high-contrast ones.',
+    };
+    contrastNote.textContent = 'Contrast read: ' + explain[contrastRead.level];
+    contrastNote.classList.remove('hidden');
+  } else if(contrastRead){
+    contrastNote.textContent = contrastRead.note || '';
+    contrastNote.classList.toggle('hidden', !contrastRead.note);
+  } else {
+    contrastNote.classList.add('hidden');
+  }
+
+  const palettes = {
+    warm: ['#B5723A','#C9A15A','#7A2E30','#6E7F66','#C1714B'],
+    cool: ['#4A5A66','#8C5A7A','#232C3A','#256B6B','#2F6E55'],
+    neutral: ['#3A3B3E','#B8A78E','#DCD3C4','#17181B','#CBB893']
+  };
+  const row = document.getElementById('paletteRow');
+  row.innerHTML = '';
+  palettes[undertone].forEach(c=>{
+    const el = document.createElement('div');
+    el.className = 'chip-color';
+    el.style.background = c;
+    row.appendChild(el);
+  });
+  document.getElementById('heroStrip').innerHTML = palettes[undertone].map(c=>`<div style="background:${c}"></div>`).join('');
+}
+
+function showBodyShape(shape, note, confidence){
+  const opts = document.querySelectorAll('#bodyShapeOptions .chip');
+  opts.forEach(c=>{ c.classList.remove('active','detected'); });
+  if(shape){
+    const match = document.querySelector(`#bodyShapeOptions .chip[data-value="${shape}"]`);
+    if(match){ match.classList.add('active','detected'); }
+  }
+  document.getElementById('shapeNote').textContent = note;
+
+  const confBadge = document.getElementById('bodyConfBadge');
+  if(shape){
+    confBadge.textContent = confidence + ' confidence';
+    confBadge.className = 'conf-badge ' + confidence;
+  } else {
+    confBadge.textContent = '';
+    confBadge.className = 'conf-badge';
+  }
+}
+
+// ---------------- CTA + matching ----------------
+const ctaBtn = document.getElementById('ctaBtn');
+function updateCtaState(){
+  if(!state.photoReady){ ctaBtn.disabled = true; ctaBtn.textContent = 'Upload a photo to continue'; return; }
+  if(!state.category){ ctaBtn.disabled = true; ctaBtn.textContent = 'Pick what you\'re shopping for'; return; }
+  if(!state.occasion || !state.style || !state.budget){ ctaBtn.disabled = true; ctaBtn.textContent = 'Answer the questions above'; return; }
+  ctaBtn.disabled = false; ctaBtn.textContent = 'Show me what suits me';
+}
+
+ctaBtn.addEventListener('click', runMatch);
+
+async function runMatch(){
+  ctaBtn.disabled = true;
+  ctaBtn.textContent = 'Matching...';
+  try{
+    const res = await fetch('/api/match', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        gender: state.gender,
+        category: state.category,
+        undertone: state.undertone,
+        bodyShape: state.bodyShape,
+        occasion: state.occasion,
+        style: state.style,
+        budget: state.budget,
+      })
+    });
+    const data = await res.json();
+    renderResults(data.items);
+    refreshAnalytics();
+  }catch(err){
+    console.error(err);
+    alert('Could not reach the server. Is the backend running?');
+  }finally{
+    updateCtaState();
+  }
+}
+
+// exposed on window because this is an ES module (module-scope functions
+// aren't reachable from inline HTML event attributes like onerror="...")
+window.imageFallback = function(img){
+  const div = document.createElement('div');
+  div.className = 'swatch';
+  div.style.cssText = 'background:' + img.dataset.fallback;
+  img.replaceWith(div);
+};
+
+function renderResults(items){
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  items.forEach(item=>{
+    const card = document.createElement('div');
+    card.className = 'card';
+    const whyBits = [];
+    if(item.colorFamily === state.undertone) whyBits.push('matches your undertone');
+    if(state.bodyShape && item.flatters && item.flatters.includes(state.bodyShape)) whyBits.push('flatters your shape');
+    if(item.occasion.includes(state.occasion)) whyBits.push(state.occasion);
+    if(item.style.includes(state.style)) whyBits.push(state.style);
+    const shopButtons = Object.keys(item.shopLinks).map(site=>
+      `<a href="${item.shopLinks[site]}" target="_blank" rel="noopener" data-site="${site}" data-name="${item.name}">${site}</a>`
+    ).join('');
+
+    // real photo if we have one, else a color swatch stands in until a real feed is connected
+    const visual = item.imageUrl
+      ? `<img src="${item.imageUrl}" alt="${item.name}" loading="lazy" data-fallback="${item.swatch}" onerror="imageFallback(this)">`
+      : `<div class="swatch" style="background:${item.swatch}"></div>`;
+    const verifiedTag = item.isRealListing
+      ? `<span class="tag verified">Verified listing</span>`
+      : `<span class="tag">${item.colorFamily}</span>`;
+
+    card.innerHTML = `
+      <div class="swatch-wrap">${visual}${verifiedTag}</div>
+      <div class="body">
+        <div class="brand">${item.brand}</div>
+        <div class="name">${item.name}</div>
+        <div class="why">${whyBits.slice(0,2).join(' &middot; ') || 'good all-round pick'}</div>
+        <div class="price">${item.isRealListing ? '' : '~'}&#8377;${item.price.toLocaleString('en-IN')}</div>
+        <a class="buy-btn" href="${item.buyUrl}" target="_blank" rel="noopener" data-site="primary" data-name="${item.name}">
+          ${item.isMonetized ? 'Buy now' : (item.isRealListing ? 'View real listing' : 'Search on Amazon')}
+        </a>
+        <div class="shop-row">${shopButtons}</div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+  document.getElementById('resultsCount').textContent = items.length + ' picks';
+  document.getElementById('resultsSection').classList.remove('hidden');
+  document.getElementById('resultsSection').scrollIntoView({behavior:'smooth', block:'start'});
+
+  grid.querySelectorAll('.shop-row a, .buy-btn').forEach(a=>{
+    a.addEventListener('click', ()=>{
+      postEvent('shop_click', { site: a.dataset.site, name: a.dataset.name }).then(refreshAnalytics);
+    });
+  });
+}
+
+// ---------------- analytics ----------------
+async function postEvent(type, meta){
+  try{
+    await fetch('/api/events', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ type, meta })
+    });
+  }catch(err){ console.error(err); }
+}
+
+async function refreshAnalytics(){
+  try{
+    const res = await fetch('/api/analytics');
+    const data = await res.json();
+    document.getElementById('statAnalyzed').firstChild.textContent = data.photosAnalyzed;
+    document.getElementById('statRejected').firstChild.textContent = data.photosRejected;
+    document.getElementById('statMatches').firstChild.textContent = data.matchesShown;
+    document.getElementById('statClicks').firstChild.textContent = data.shopClicks;
+  }catch(err){ console.error(err); }
+}
+refreshAnalytics();
+</script>
+
+</body>
+</html>
